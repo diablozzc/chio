@@ -1,0 +1,7 @@
+{
+  "Name": "Chio v1.0 Demo Server App",
+  "Host": "127.0.0.1",
+  "TcpPort": 9999,
+  "MaxConn": 1,
+  "WorkerPoolSize": 10
+}
