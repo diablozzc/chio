@@ -1,6 +1,6 @@
 package cnet
 
-import "chio/ciface"
+import "github.com/diablozzc/chio/ciface"
 
 type Request struct {
 	// 已经和客户端建立好的链接

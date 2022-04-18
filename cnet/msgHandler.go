@@ -1,10 +1,11 @@
 package cnet
 
 import (
-	"chio/ciface"
-	"chio/utils"
 	"fmt"
 	"strconv"
+
+	"github.com/diablozzc/chio/ciface"
+	"github.com/diablozzc/chio/utils"
 )
 
 /*

@@ -2,14 +2,14 @@ package cnet
 
 import (
 	"bytes"
-	"chio/ciface"
-	"chio/utils"
 	"encoding/binary"
 	"errors"
+
+	"github.com/diablozzc/chio/ciface"
+	"github.com/diablozzc/chio/utils"
 )
 
 type DataPack struct {
-
 }
 
 // 拆包封包实例初始化方法
@@ -29,15 +29,15 @@ func (dp *DataPack) Pack(msg ciface.IMessage) ([]byte, error) {
 	dataBuff := bytes.NewBuffer([]byte{})
 
 	// 将dataLen 写入到dataBuff中
-	if err:=binary.Write(dataBuff, binary.LittleEndian, msg.GetMsgLen()); err != nil {
+	if err := binary.Write(dataBuff, binary.LittleEndian, msg.GetMsgLen()); err != nil {
 		return nil, err
 	}
 	// 将MsgId 写入到dataBuff中
-		if err:=binary.Write(dataBuff, binary.LittleEndian, msg.GetMsgID()); err != nil {
+	if err := binary.Write(dataBuff, binary.LittleEndian, msg.GetMsgID()); err != nil {
 		return nil, err
 	}
 	// 将data 写入到dataBuff中
-		if err:=binary.Write(dataBuff, binary.LittleEndian, msg.GetData()); err != nil {
+	if err := binary.Write(dataBuff, binary.LittleEndian, msg.GetData()); err != nil {
 		return nil, err
 	}
 
@@ -50,23 +50,22 @@ func (dp *DataPack) Unpack(data []byte) (ciface.IMessage, error) {
 	dataBuff := bytes.NewReader(data)
 
 	// 只解压head的信息，得到dataLen和msgID
-	msg:=&Message{}
+	msg := &Message{}
 
 	// 读dataLen
-	if err:=binary.Read(dataBuff, binary.LittleEndian, &msg.DataLen); err != nil {
+	if err := binary.Read(dataBuff, binary.LittleEndian, &msg.DataLen); err != nil {
 		return nil, err
 	}
 
 	// 读msgID
-	if err:=binary.Read(dataBuff, binary.LittleEndian, &msg.Id); err != nil {
+	if err := binary.Read(dataBuff, binary.LittleEndian, &msg.Id); err != nil {
 		return nil, err
 	}
 
 	// 判断dataLen的长度是否超出我们允许的最大包长度
-	if (utils.GlobalObject.MaxPackageSize > 0 && msg.DataLen > utils.GlobalObject.MaxPackageSize) {
+	if utils.GlobalObject.MaxPackageSize > 0 && msg.DataLen > utils.GlobalObject.MaxPackageSize {
 		return nil, errors.New("too large msg data recieved")
 	}
-
 
 	return msg, nil
 }

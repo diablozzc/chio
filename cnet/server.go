@@ -1,10 +1,11 @@
 package cnet
 
 import (
-	"chio/ciface"
-	"chio/utils"
 	"fmt"
 	"net"
+
+	"github.com/diablozzc/chio/ciface"
+	"github.com/diablozzc/chio/utils"
 )
 
 // iServer的接口实现, 定义一个Server的服务器模块

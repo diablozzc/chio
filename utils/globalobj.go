@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"chio/ciface"
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/diablozzc/chio/ciface"
 )
 
 /*

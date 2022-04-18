@@ -1,13 +1,16 @@
 package cnet
 
 import (
-	"chio/ciface"
-	"chio/utils"
+	// "chio/ciface"
+	// "chio/utils"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"sync"
+
+	"github.com/diablozzc/chio/ciface"
+	"github.com/diablozzc/chio/utils"
 )
 
 type Connection struct {

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"chio/ciface"
-	"chio/cnet"
 	"fmt"
+
+	"github.com/diablozzc/chio/ciface"
+	"github.com/diablozzc/chio/cnet"
 )
 
 // ping test 自定义路由
@@ -52,14 +53,14 @@ func (r *HelloRouter) Handle(request ciface.IRequest) {
 // 创建连接之后执行钩子函数
 func DoConnectionBegin(conn ciface.IConnection) {
 	fmt.Println(" ==> DoConnectionBegin...")
-	if err := conn.SendMsg(202, []byte("DoConnection BEGIN...\n")); err!=nil{
+	if err := conn.SendMsg(202, []byte("DoConnection BEGIN...\n")); err != nil {
 		fmt.Println("DoConnection BEGIN... err ", err)
 	}
 
 	fmt.Println("Set conn Name")
-	conn.SetProperty("Name", "黑超特攻")
-	conn.SetProperty("Home", "zhilogos.com")
-	conn.SetProperty("Github", "github.com/zhilogos")
+	conn.SetProperty("Name", "blackzzc")
+	conn.SetProperty("Home", "http:/www.zhilogos.com")
+	conn.SetProperty("Github", "github.com/diablozzc")
 }
 
 // 连接断开之前的需要执行的函数
@@ -73,9 +74,6 @@ func DoConnectionLost(conn ciface.IConnection) {
 		fmt.Println("Name = ", name)
 	}
 }
-
-
-
 
 func main() {
 	// 创建一个server句柄
