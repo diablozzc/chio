@@ -15,13 +15,12 @@ type PingRouter struct {
 
 // Test Handle
 func (r *PingRouter) Handle(request ciface.IRequest) {
-	fmt.Println("call router Handle...")
 
 	// 先读取客户端的数据，再回写ping...
 	fmt.Println("recv from client : msgID = ", request.GetMsgID(),
 		", data = ", string(request.GetData()))
 
-	err := request.GetConnection().SendMsg(200, []byte("ping...\n"))
+	err := request.GetConnection().SendMsg(4, []byte("pong"))
 	if err != nil {
 		fmt.Println("call back ping... err ", err)
 	}
@@ -30,18 +29,16 @@ func (r *PingRouter) Handle(request ciface.IRequest) {
 
 // ---------------------------------------------------
 
-type HelloRouter struct {
+type AuthRouter struct {
 	cnet.BaseRouter
 }
 
-func (r *HelloRouter) Handle(request ciface.IRequest) {
-	fmt.Println("call router Handle...")
+func (r *AuthRouter) Handle(request ciface.IRequest) {
 
-	// 先读取客户端的数据，再回写ping...
 	fmt.Println("recv from client : msgID = ", request.GetMsgID(),
 		", data = ", string(request.GetData()))
 
-	err := request.GetConnection().SendMsg(201, []byte("hello...\n"))
+	err := request.GetConnection().SendMsg(2, []byte("ok"))
 	if err != nil {
 		fmt.Println("call back hello... err ", err)
 	}
@@ -79,8 +76,8 @@ func main() {
 	// 创建一个server句柄
 	s := cnet.NewServer("chio v1.0")
 	// 注册自定义路由
-	s.AddRouter(0, &PingRouter{})
-	s.AddRouter(1, &HelloRouter{})
+	s.AddRouter(3, &PingRouter{})
+	s.AddRouter(1, &AuthRouter{})
 
 	// 注册连接回调，当有新的连接进入时，会调用该方法
 	s.SetAfterConnStart(DoConnectionBegin)

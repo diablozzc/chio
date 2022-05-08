@@ -1,70 +1,103 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"net"
+	"errors"
+	"log"
+	"os"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/diablozzc/chio/cnet"
+	"github.com/diablozzc/chio/demo/v0.10/Client/chioClient"
+)
+
+var (
+	done      = make(chan bool, 1)
+	interrupt = make(chan os.Signal, 1)
+	reconnect = make(chan bool, 1)
 )
 
 // 模拟客户端
 func main() {
-	fmt.Println("client start...")
-	time.Sleep(1 * time.Second)
-	// 直接连接远程服务器
-	conn, err := net.Dial("tcp", "127.0.0.1:9999")
-	if err != nil {
-		fmt.Println("client start err", err)
-		return
-	}
-	// 连接调用write写数据
+	reconnect <- true
+
+	// 监听循环
 	for {
-		// 发送封包的message消息
-		dp := cnet.NewDataPack()
-		binaryMsg, err := dp.Pack(cnet.NewMsgPackage(0, []byte("ping chio v1.0")))
-		if err != nil {
-			fmt.Println("pack msg err:", err)
+		select {
+		case <-done:
 			return
+		case <-interrupt:
+			log.Println("interrupt:", interrupt)
+			done <- true
+		case <-reconnect:
+			doConnect()
 		}
+	}
+}
 
-		if _, err := conn.Write(binaryMsg); err != nil {
-			fmt.Println("write err:", err)
-			return
-		}
-		// 服务器就应该回复一个message
+func doConnect() error {
+	bs := backoff.NewExponentialBackOff()
+	bs.MaxElapsedTime = 0
+	bs.MaxInterval = time.Second * 20
+	bs.Multiplier = 1.5
+	bs.InitialInterval = time.Second * 2
+	err := backoff.Retry(bootstrap, bs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-		// 先读取流中的head部分 得到ID和dataLen
+func bootstrap() error {
+	// 创建连接
+	log.Println("连接xdr server...")
+	cc, err := new(chioClient.ChioClient).GetInstance()
+	if err != nil {
+		return errors.New("创建连接失败")
+	}
 
-		binaryHead := make([]byte, dp.GetHeadLen())
-		// ReadFull 会把msg填充满为止
-		if _, err := io.ReadFull(conn, binaryHead); err != nil {
-			fmt.Println("read head error", err)
-			break
-		}
-
-		// 将二进制的head拆包到msg结构体中
-		msgHead, err := dp.Unpack(binaryHead)
-		if err != nil {
-			fmt.Println("unpack msgHead error", err)
-			break
-		}
-
-		if msgHead.GetMsgLen() > 0 {
-			// 再根据DataLen进行第二次读取，将data读出来
-
-			msg := msgHead.(*cnet.Message)
-			msg.Data = make([]byte, msg.GetMsgLen())
-
-			if _, err := io.ReadFull(conn, msg.Data); err != nil {
-				fmt.Println("read msg data error", err)
+	// 连接成功后开始消息监听
+	go startMessageHandle(cc)
+	// 定时发送ping
+	go func() {
+		for {
+			err := cc.Send(3, "ping server")
+			if err != nil {
 				return
 			}
-
-			fmt.Println("==> Recv Server Msg: ID=", msg.Id, ", len=", msg.DataLen, ", data=", string(msg.Data))
+			time.Sleep(time.Second * 3)
 		}
+	}()
 
-		time.Sleep(1 * time.Second)
+	return nil
+}
+
+// 开始消息监听
+func startMessageHandle(cc *chioClient.ChioClient) {
+	for {
+		message, err := cc.Recv()
+		if err != nil {
+			log.Println("recv message failed:", err)
+			continue
+		}
+		if message == nil {
+			log.Println("recv message is nil")
+			cc.Close()
+			reconnect <- true
+			return
+		}
+		route(message)
+	}
+}
+
+// 消息路由
+func route(msg *cnet.Message) {
+	msgType := msg.GetMsgID()
+
+	switch msgType {
+	case 4:
+		log.Println("收到服务器消息:", string(msg.GetData()))
+	default:
+		log.Println("接收到未知消息:", string(msg.GetData()))
 	}
 }
